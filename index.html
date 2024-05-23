@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <div>Hello</div>
+    <button onclick="change()">Click</button>
+
+    <script>
+      function App() {
+        let boolean = true
+        return {
+          toggleShow: () => {
+            boolean = !boolean
+
+            document.querySelector('div').innerHTML = boolean
+              ? 'hello'
+              : 'hello world'
+            document.querySelector('div').style.color = boolean ? 'red' : 'blue'
+          },
+        }
+      }
+
+      const app = App()
+
+      app.toggleShow('hello')
+
+      function change() {
+        app.toggleShow('hello world')
+      }
+    </script>
+  </body>
+</html>
