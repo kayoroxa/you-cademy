@@ -1,6 +1,7 @@
 'use server'
 
 import { prisma } from '@/lib/prisma'
+import { User } from '@prisma/client'
 import { revalidatePath } from 'next/cache'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
@@ -36,14 +37,28 @@ export async function getProfilePicture() {
   return 'https://github.com/shadcn.png'
 }
 
-export async function getBooks() {
-  const data = await prisma.video.findMany({
-    where: {
-      user_id: 1,
+export async function getUserCourses({ userId }: { userId: User['id'] }) {
+  const userWithCourses = await prisma.user.findUnique({
+    where: { id: userId },
+    include: {
+      Courses: true,
     },
   })
 
-  return data
+  return userWithCourses?.Courses || []
+}
+
+export async function getLessons({ courseId }: { courseId: User['id'] }) {
+  const lessons = await prisma.video.findMany({
+    where: {
+      courseId,
+    },
+    // orderBy: {
+    //   createdAt: 'desc',
+    // },
+  })
+
+  return lessons
 }
 
 export async function addNewBook(title: string) {
@@ -54,13 +69,13 @@ export async function addNewBook(title: string) {
 
   console.log('oi')
 
-  await prisma.video.create({
-    data: {
-      title: title || 'oi',
-      user_id: 1,
-      youtubeId: 'test',
-    },
-  })
+  // await prisma.video.create({
+  //   data: {
+  //     title: title || 'oi',
+  //     user_id: 1,
+  //     youtubeId: 'test',
+  //   },
+  // })
 
   revalidatePath('/')
 }

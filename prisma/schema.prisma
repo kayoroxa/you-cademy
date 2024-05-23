@@ -14,16 +14,25 @@ datasource db {
 }
 
 model User {
-  id     Int     @id @default(autoincrement())
-  email  String  @unique
-  name   String?
-  videos Video[]
+  id      Int      @id @default(autoincrement())
+  email   String   @unique
+  name    String?
+  Courses Course[]
 }
 
 model Video {
-  id        Int    @id @default(autoincrement())
+  id        Int     @id @default(autoincrement())
   title     String
   youtubeId String
-  user      User   @relation(fields: [user_id], references: [id])
-  user_id   Int
+  Course    Course? @relation(fields: [courseId], references: [id])
+  courseId  Int?
+}
+
+model Course {
+  id             Int     @id @default(autoincrement())
+  title          String
+  owner_id       Int
+  videos         Video[]
+  User           User[]
+  courseOwnersId Int?
 }
