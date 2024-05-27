@@ -1,35 +1,72 @@
 'use server'
 
-import { prisma } from '@/lib/prisma'
-import { User } from '@prisma/client'
+import { _prisma, prisma } from '@/lib/prisma'
+import { User, Video } from '@prisma/client'
 import { revalidatePath } from 'next/cache'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 
-export async function serverLogin({ email }: { email: string }) {
-  console.log(email)
-  if (!email) return false
-  const data = await prisma.user.findFirst({
+export async function getUserData({
+  userId,
+  email,
+}: {
+  userId?: User['id']
+  email?: User['email']
+}) {
+  if (!userId && !email) {
+    redirect('/login')
+    return null
+  }
+  try {
+    const user = await prisma.user.findFirst({
+      where: {
+        id: userId,
+        email,
+      },
+    })
+
+    return user
+  } catch (error) {
+    redirect('/login')
+    console.error(error)
+    return null
+  }
+}
+
+export async function updateVideo(data: Video) {
+  console.log({ data })
+  await _prisma.video.update({
     where: {
-      email,
+      id: data.id,
+    },
+    data: {
+      title: data.title,
+      youtubeId: data.youtubeId,
     },
   })
 
-  console.log(data)
-  const hasAuth = data
+  revalidatePath('/')
+  revalidatePath('/course/[courseId]/edit')
+}
+
+export async function serverLogin({ email }: { email: string }) {
+  console.log(email)
+  if (!email) return false
+  const user = await getUserData({ email })
+
+  const hasAuth = user
   if (!hasAuth) {
-    cookies().delete('logged_in')
+    cookies().delete('logged_user_id')
     return false
   }
-  const oneDay = 24 * 60 * 60 * 1000
 
-  cookies().set('logged_in', 'true')
+  cookies().set('logged_user_id', String(user.id))
 
   redirect('/')
 }
 
 export async function serverLogout() {
-  cookies().set('logged_in', 'false')
+  cookies().delete('logged_user_id')
   redirect('/login')
 }
 
@@ -37,9 +74,16 @@ export async function getProfilePicture() {
   return 'https://github.com/shadcn.png'
 }
 
-export async function getUserCourses({ userId }: { userId: User['id'] }) {
+export async function getUserCourses({
+  userId,
+  email,
+}: {
+  userId?: User['id']
+  email?: User['email']
+}) {
+  if (!userId && !email) return []
   const userWithCourses = await prisma.user.findUnique({
-    where: { id: userId },
+    where: { id: userId, email: email },
     include: {
       Courses: true,
     },

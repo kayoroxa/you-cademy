@@ -1,6 +1,10 @@
 'use client'
 import { serverLogin } from '@/app/actions'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { useToast } from '@/components/ui/use-toast'
+import { signIn } from 'next-auth/react'
+import { redirect } from 'next/navigation'
 
 export default function Home() {
   const { toast } = useToast()
@@ -15,21 +19,23 @@ export default function Home() {
       })
       return
     } else {
-      // toast({
-      //   title: 'Logged In',
-      //   description: 'You are now logged in',
-      // })
+      await signIn('credentials', {
+        email: email,
+        redirect: true,
+        callbackUrl: '/',
+      })
+      redirect('/')
     }
   }
 
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'center' }}>
-        <form action={handleSubmit}>
+        <form action={handleSubmit} className="flex flex-col gap-4 w-[400px]">
           <h1>Log In</h1>
-          <input type="email" name="email" placeholder="email" required />
+          <Input type="email" name="email" placeholder="email" required />
           {/* <input type="password" placeholder="Password" required /> */}
-          <button>Log In</button>
+          <Button>Log In</Button>
         </form>
       </div>
     </div>
